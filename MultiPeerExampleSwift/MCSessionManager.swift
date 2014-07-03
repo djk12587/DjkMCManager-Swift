@@ -38,19 +38,20 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     init()  {
         super.init()
         
-        var notificationCenter = NSNotificationCenter.defaultCenter()
+        //var notificationCenter = NSNotificationCenter.defaultCenter()
         
-        notificationCenter.addObserver(self, selector:"startServices", name: UIApplicationWillEnterForegroundNotification, object: nil)
-        notificationCenter.addObserver(self, selector:"stopServices", name: UIApplicationDidEnterBackgroundNotification, object: nil)
+        //notificationCenter.addObserver(self, selector:"startServices", name: UIApplicationWillEnterForegroundNotification, object: nil)
+        //notificationCenter.addObserver(self, selector:"stopServices", name: UIApplicationDidEnterBackgroundNotification, object: nil)
         
-        startServices()
+        //startServices()
         
     }
     
     func setupSession() {
         
         if !_peerID? {
-            _peerID = MCPeerID(displayName: UIDevice.currentDevice().name)
+            var timeString:String = "\(NSDate.timeIntervalSinceReferenceDate())"
+            _peerID = MCPeerID(displayName:timeString) //UIDevice.currentDevice().name*)
         }
         
         if !_session? {
@@ -59,12 +60,12 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         }
         
         if !_nearbyBrowser? {
-            _nearbyBrowser = MCNearbyServiceBrowser(peer: _peerID, serviceType: _serviceType)
+            _nearbyBrowser = MCNearbyServiceBrowser(peer: _session?.myPeerID, serviceType: _serviceType)
             _nearbyBrowser!.delegate = self
         }
         
         if !_nearbyAdvertiser? {
-            _nearbyAdvertiser = MCNearbyServiceAdvertiser(peer: _peerID, discoveryInfo: nil, serviceType: _serviceType)
+            _nearbyAdvertiser = MCNearbyServiceAdvertiser(peer: _session?.myPeerID, discoveryInfo: nil, serviceType: _serviceType)
             _nearbyAdvertiser!.delegate = self
         }
 
@@ -82,12 +83,20 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         setupSession()
         _nearbyAdvertiser?.startAdvertisingPeer()
         _nearbyBrowser?.startBrowsingForPeers()
+        _delegate?.sessionDidChangeState()
     }
     
     func stopServices() {
+        teardownSession()
         _nearbyAdvertiser?.stopAdvertisingPeer()
         _nearbyBrowser?.stopBrowsingForPeers()
-        teardownSession()
+        
+        _session = nil
+        _peerID = nil
+        _nearbyAdvertiser = nil
+        _nearbyBrowser = nil
+        
+        _delegate?.sessionDidChangeState()
     }
     
     //#pragma mark - MCSessionDelegate Methods
@@ -96,15 +105,14 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         
         switch state {
         case .Connected:
-            println("\(_peerID?.displayName) is connected to \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) is connected to \(peerID.displayName)")
             _connectingPeers.removeObject(peerID)
         case .Connecting:
-            println("\(_peerID?.displayName) is connecting to \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) is connecting to \(peerID.displayName)")
             _connectingPeers.addObject(peerID)
         case .NotConnected:
-            println("\(_peerID?.displayName) is not connected to \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) is not connected to \(peerID.displayName)")
             _connectingPeers.removeObject(peerID)
-            _session?.disconnect()
         }
         
         _delegate?.sessionDidChangeState()
@@ -135,25 +143,28 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
             certificateHandler(true)
     }
     
+    func invitePeerToMesh(peerID:MCPeerID) {
+        _nearbyBrowser?.invitePeer(peerID, toSession: _session?, withContext: nil, timeout: 10)
+    }
+    
     //#pragma mark advertiser delegate methods
     
     func advertiser(advertiser: MCNearbyServiceAdvertiser!, didReceiveInvitationFromPeer peerID: MCPeerID!, withContext context: NSData!, invitationHandler: ((Bool, MCSession!) -> Void)!) {
-        println("did receive an invitation from \(peerID.displayName)")
+        println("\(_session?.myPeerID.displayName) did receive an invitation from \(peerID.displayName)")
         
-        
-        var shouldAccept = (_peerID?.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedAscending)
+        /*var shouldAccept = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedAscending)
         
         if shouldAccept {
-            println("\(_peerID?.displayName) Accepted Invite \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) Accepted Invite \(peerID.displayName)")
             invitationHandler(true,_session)
             _connectingPeers.addObject(peerID)
         } else {
-            println("\(_peerID?.displayName) declined Invitation \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) declined Invitation \(peerID.displayName)")
             invitationHandler(false,_session)
-        }
+        }*/
         
-        //invitationHandler(true,_session)
-
+        println("\(_session?.myPeerID.displayName) Accepted Invite \(peerID.displayName)")
+        invitationHandler(true,_session)
         
         _delegate?.sessionDidChangeState()
     }
@@ -170,13 +181,13 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     
     func browser(browser: MCNearbyServiceBrowser!, foundPeer peerID: MCPeerID!, withDiscoveryInfo info: NSDictionary!)  {
         
-        var shouldInvite = (_peerID?.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
+        var shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
         
         if shouldInvite {
-            println("\(_peerID?.displayName) sent invite to \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) sent invite to \(peerID.displayName)")
             browser.invitePeer(peerID, toSession: _session, withContext: nil, timeout: 10)
         } else {
-            println("\(_peerID?.displayName) is not sending an invite to \(peerID.displayName)")
+            println("\(_session?.myPeerID.displayName) is not sending an invite to \(peerID.displayName)")
         }
         
         _peersInRange.addObject(peerID)
@@ -185,11 +196,11 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     }
     
     func browser(browser: MCNearbyServiceBrowser!, lostPeer peerID: MCPeerID!)  {
-        println("\(_peerID?.displayName) lost peer \(peerID.displayName)")
+        println("\(_session?.myPeerID.displayName) lost peer \(peerID.displayName)")
         
         _connectingPeers.removeObject(peerID)
         _peersInRange.removeObject(peerID)
         
         _delegate?.sessionDidChangeState()
-    }    
+    }
 }

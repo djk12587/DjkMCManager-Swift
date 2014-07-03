@@ -41,6 +41,14 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
         println("connected Peers: \(singleton._session?.connectedPeers)")
     }
     
+    @IBAction func leaveMeshAction(sender: AnyObject) {
+        singleton.stopServices()
+    }
+    
+    @IBAction func joinMeshAction(sender: AnyObject) {
+        singleton.startServices()
+    }
+    
     func sessionDidChangeState()  {
         println("************************************************")
        /* println("connecting Peers: \(singleton._connectingPeers)")
@@ -61,8 +69,14 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
             cell.textLabel.text = singleton._session?.connectedPeers[indexPath.row].displayName
         case 1:
             cell.textLabel.text = singleton._connectingPeers[indexPath.row].displayName
-        default:
+        case 2:
             cell.textLabel.text = singleton._peersInRange[indexPath.row].displayName
+        default:
+            if singleton._session?.myPeerID? {
+                cell.textLabel.text = singleton._session?.myPeerID.displayName
+            } else {
+                cell.textLabel.text = "not in mesh"
+            }
         }
 
         return cell
@@ -79,13 +93,15 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
             }
         case 1:
             return singleton._connectingPeers.count
-        default:
+        case 2:
             return singleton._peersInRange.count
+        default:
+            return 1
         }
     }
     
     func numberOfSectionsInTableView(_tableView: UITableView!) -> Int {
-        return 3
+        return 4
     }
     
     func tableView(_tableView: UITableView!, titleForHeaderInSection section: Int) -> String! {
@@ -94,14 +110,20 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
             return "Connected"
         case 1:
             return "Connecting"
-        default:
+        case 2:
             return "Devices In Range"
+        default:
+            return "My ID"
         }
     }
     
     func tableView(_tableView: UITableView!, didSelectRowAtIndexPath indexPath: NSIndexPath!) {
         _tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        
+        if indexPath.section == 2 {
+            println("\(singleton._session?.myPeerID.displayName) sent invite to \(singleton._peersInRange[indexPath.row].displayName)")
+            singleton.invitePeerToMesh(singleton._peersInRange[indexPath.row] as MCPeerID)
+        }
     }
-
 }
 

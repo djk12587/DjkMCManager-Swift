@@ -23,7 +23,7 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         return Static.instance
     }
     
-    var _peerID:MCPeerID?// = MCPeerID(displayName:UIDevice.currentDevice().name)//NSUUID.UUID().UUIDString)
+    var _peerID:MCPeerID?
     let _serviceType = "serviceType2"
     var _session:MCSession?
     
@@ -35,23 +35,11 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     
     var _delegate:MCSessionManagerDelegate?
     
-    init()  {
-        super.init()
-        
-        //var notificationCenter = NSNotificationCenter.defaultCenter()
-        
-        //notificationCenter.addObserver(self, selector:"startServices", name: UIApplicationWillEnterForegroundNotification, object: nil)
-        //notificationCenter.addObserver(self, selector:"stopServices", name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        
-        //startServices()
-        
-    }
-    
     func setupSession() {
         
         if !_peerID? {
             var timeString:String = "\(NSDate.timeIntervalSinceReferenceDate())"
-            _peerID = MCPeerID(displayName:timeString) //UIDevice.currentDevice().name*)
+            _peerID = MCPeerID(displayName:timeString)
         }
         
         if !_session? {
@@ -152,18 +140,7 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     func advertiser(advertiser: MCNearbyServiceAdvertiser!, didReceiveInvitationFromPeer peerID: MCPeerID!, withContext context: NSData!, invitationHandler: ((Bool, MCSession!) -> Void)!) {
         println("\(_session?.myPeerID.displayName) did receive an invitation from \(peerID.displayName)")
         
-        /*var shouldAccept = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedAscending)
-        
-        if shouldAccept {
-            println("\(_session?.myPeerID.displayName) Accepted Invite \(peerID.displayName)")
-            invitationHandler(true,_session)
-            _connectingPeers.addObject(peerID)
-        } else {
-            println("\(_session?.myPeerID.displayName) declined Invitation \(peerID.displayName)")
-            invitationHandler(false,_session)
-        }*/
-        
-        println("\(_session?.myPeerID.displayName) Accepted Invite \(peerID.displayName)")
+        println("\(_session?.myPeerID.displayName) accepted Invite \(peerID.displayName)")
         invitationHandler(true,_session)
         
         _delegate?.sessionDidChangeState()

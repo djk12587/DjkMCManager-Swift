@@ -23,6 +23,11 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
         
         connectionTableView.contentInset = UIEdgeInsetsMake(20.0, 0.0, 0.0, 0.0)
     }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        connectionTableView.reloadData()
+    }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -38,9 +43,9 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
     
     func sessionDidChangeState()  {
         println("************************************************")
-        println("connecting Peers: \(singleton._connectingPeers)")
+       /* println("connecting Peers: \(singleton._connectingPeers)")
         println("peers In Range: \(singleton._peersInRange)")
-        println("connected Peers: \(singleton._session?.connectedPeers)")
+        println("connected Peers: \(singleton._session?.connectedPeers)")*/
         
         dispatch_async(dispatch_get_main_queue(), {self.connectionTableView.reloadData()})
     }

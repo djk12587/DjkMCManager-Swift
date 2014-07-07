@@ -98,21 +98,22 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     
     func session(session: MCSession!, peer peerID: MCPeerID!, didChangeState state: MCSessionState) {
         
-        switch state {
-        case .Connected:
-            println("\(_session?.myPeerID.displayName) is connected to \(peerID.displayName)")
-            _connectingPeers.removeObject(peerID)
-        case .Connecting:
-            println("\(_session?.myPeerID.displayName) is connecting to \(peerID.displayName)")
-            _connectingPeers.addObject(peerID)
-        case .NotConnected:
-            println("\(_session?.myPeerID.displayName) is not connected to \(peerID.displayName)")
-            _connectingPeers.removeObject(peerID)
-        }
-        
-        _delegate?.sessionDidChangeState()
-        
-        println(session.connectedPeers)
+        dispatch_async(dispatch_get_main_queue(), {
+            switch state {
+            case .Connected:
+                println("\(self._session?.myPeerID.displayName) is connected to \(peerID.displayName)")
+                self._connectingPeers.removeObject(peerID)
+            case .Connecting:
+                println("\(self._session?.myPeerID.displayName) is connecting to \(peerID.displayName)")
+                self._connectingPeers.addObject(peerID)
+            case .NotConnected:
+                println("\(self._session?.myPeerID.displayName) is not connected to \(peerID.displayName)")
+                self._connectingPeers.removeObject(peerID)
+            }
+            
+            self._delegate?.sessionDidChangeState()
+            println(session.connectedPeers)
+            })
     }
     
     func session(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!)  {
@@ -167,7 +168,35 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     
     func browser(browser: MCNearbyServiceBrowser!, foundPeer peerID: MCPeerID!, withDiscoveryInfo info: NSDictionary!)  {
         
-        var shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
+        var shouldInvite = false
+        
+        if _session?.connectedPeers.count > 0 {
+
+            for aPeer:MCPeerID! in _session!.connectedPeers {
+                
+                var minPeer = _session!.myPeerID.displayName
+                
+                if (minPeer.localizedCaseInsensitiveCompare(aPeer.displayName) != NSComparisonResult.OrderedDescending) {
+                    minPeer = aPeer.displayName
+                    //minPeer = _session!.myPeerID.displayName
+                }
+                
+                println("the min displayName is \(minPeer)")
+                
+                if minPeer == _session!.myPeerID.displayName {
+                    println("min invite is sent")
+                    shouldInvite = true
+                } else {
+                    println("min invite is not sent")
+                    shouldInvite = false
+                }
+            }
+            
+        } else {
+            println("regular invite")
+            shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
+        }
+        
         
         if shouldInvite {
             println("\(_session?.myPeerID.displayName) sent invite to \(peerID.displayName)")

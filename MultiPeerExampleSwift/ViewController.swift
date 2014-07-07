@@ -54,9 +54,9 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
     }
     
     func sessionDidChangeState()  {
-        dispatch_async(dispatch_get_main_queue(), {
+       // dispatch_async(dispatch_get_main_queue(), {
             self.connectionTableView.reloadData()
-            })
+         //   })
     }
     
     func sessionManager(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!) {
@@ -143,7 +143,10 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
             var error:NSError?
             let alert = UIAlertView()
             
-            if singleton._session?.sendData(data, toPeers: singleton._session?.connectedPeers, withMode: MCSessionSendDataMode.Reliable, error: &error) {
+            var singlePeerArray = MCPeerID[]()
+            singlePeerArray.append(singleton._session?.connectedPeers[indexPath.row] as MCPeerID)
+            
+            if singleton._session?.sendData(data, toPeers:singlePeerArray, withMode: MCSessionSendDataMode.Reliable, error: &error) {
                 alert.title = "Success"
                 alert.message = "Message sent!"
                 alert.addButtonWithTitle("Okay")

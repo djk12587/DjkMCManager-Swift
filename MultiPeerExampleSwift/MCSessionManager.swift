@@ -12,6 +12,7 @@ import MultipeerConnectivity
 
 protocol MCSessionManagerDelegate {
     func sessionDidChangeState()
+    func sessionManager(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!)
 }
 
 class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate{
@@ -35,11 +36,13 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     
     var _delegate:MCSessionManagerDelegate?
     
+    var inMesh = false
+    
     func setupSession() {
         
         if !_peerID? {
             var timeString:String = "\(NSDate.timeIntervalSinceReferenceDate())"
-            _peerID = MCPeerID(displayName:timeString)
+            _peerID = MCPeerID(displayName:UIDevice.currentDevice().name)//timeString)
         }
         
         if !_session? {
@@ -72,6 +75,8 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         _nearbyAdvertiser?.startAdvertisingPeer()
         _nearbyBrowser?.startBrowsingForPeers()
         _delegate?.sessionDidChangeState()
+        
+        inMesh = true
     }
     
     func stopServices() {
@@ -85,6 +90,8 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         _nearbyBrowser = nil
         
         _delegate?.sessionDidChangeState()
+        
+        inMesh = false
     }
     
     //#pragma mark - MCSessionDelegate Methods
@@ -109,19 +116,21 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     }
     
     func session(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!)  {
-        
+        let message = NSString(data: data, encoding: NSUTF8StringEncoding)
+        println("\(_session?.myPeerID.displayName) didReceiveDataFromPeer:\(peerID.displayName) withMessage:\(message)")
+        _delegate?.sessionManager(session, didReceiveData: data, fromPeer: peerID)
     }
     
     func session(session: MCSession!, didStartReceivingResourceWithName resourceName: String!, fromPeer peerID: MCPeerID!, withProgress progress: NSProgress!) {
-        
+        println("\(_session?.myPeerID.displayName) didStartReceivingResourceWithName: \(resourceName) fromPeer:\(peerID.displayName)")
     }
     
     func session(session: MCSession!, didFinishReceivingResourceWithName resourceName: String!, fromPeer peerID: MCPeerID!, atURL localURL: NSURL!, withError error: NSError!) {
-        
+        println("\(_session?.myPeerID.displayName) didFinishReceivingResourceWithName: \(resourceName) fromPeer:\(peerID.displayName)")
     }
     
     func session(session: MCSession!, didReceiveStream stream: NSInputStream!, withName streamName: String!, fromPeer peerID: MCPeerID!) {
-        
+        println("\(_session?.myPeerID.displayName) didReceiveStreamWithName: \(streamName) fromPeer:\(peerID.displayName)")
     }
     
     func session(session: MCSession!,

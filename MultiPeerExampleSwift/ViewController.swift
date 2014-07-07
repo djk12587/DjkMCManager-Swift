@@ -42,20 +42,36 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
     }
     
     @IBAction func leaveMeshAction(sender: AnyObject) {
-        singleton.stopServices()
+        if singleton.inMesh {
+            singleton.stopServices()
+        }
     }
     
     @IBAction func joinMeshAction(sender: AnyObject) {
-        singleton.startServices()
+        if !singleton.inMesh {
+            singleton.startServices()
+        }
     }
     
     func sessionDidChangeState()  {
-        println("************************************************")
-       /* println("connecting Peers: \(singleton._connectingPeers)")
-        println("peers In Range: \(singleton._peersInRange)")
-        println("connected Peers: \(singleton._session?.connectedPeers)")*/
+        dispatch_async(dispatch_get_main_queue(), {
+            self.connectionTableView.reloadData()
+            })
+    }
+    
+    func sessionManager(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!) {
         
-        dispatch_async(dispatch_get_main_queue(), {self.connectionTableView.reloadData()})
+        println("sessionManager")
+        
+        dispatch_async(dispatch_get_main_queue(), {
+            let message = NSString(data: data, encoding: NSUTF8StringEncoding)
+            let alert = UIAlertView()
+            alert.title = "Message Received!"
+            alert.message = message
+            alert.addButtonWithTitle("Okay")
+            alert.show()
+            
+            })
     }
     
     //#pragma mark - UITableView Delegate Methods
@@ -107,11 +123,11 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
     func tableView(_tableView: UITableView!, titleForHeaderInSection section: Int) -> String! {
         switch section {
         case 0:
-            return "Connected"
+            return "Connected - Tap to send a message"
         case 1:
             return "Connecting"
         case 2:
-            return "Devices In Range"
+            return "Devices In Range - Tap to connect"
         default:
             return "My ID"
         }
@@ -120,10 +136,32 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
     func tableView(_tableView: UITableView!, didSelectRowAtIndexPath indexPath: NSIndexPath!) {
         _tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
-        if indexPath.section == 2 {
+        switch indexPath.section {
+        case 0:
+            let message = "\(singleton._peerID?.displayName) says hello!"
+            let data = message.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)
+            var error:NSError?
+            let alert = UIAlertView()
+            
+            if singleton._session?.sendData(data, toPeers: singleton._session?.connectedPeers, withMode: MCSessionSendDataMode.Reliable, error: &error) {
+                alert.title = "Success"
+                alert.message = "Message sent!"
+                alert.addButtonWithTitle("Okay")
+            } else {
+                alert.title = "Failure"
+                alert.message = "Message was not sent!"
+                alert.addButtonWithTitle("Okay")
+            }
+            
+            alert.show()
+            
+        case 2:
             println("\(singleton._session?.myPeerID.displayName) sent invite to \(singleton._peersInRange[indexPath.row].displayName)")
             singleton.invitePeerToMesh(singleton._peersInRange[indexPath.row] as MCPeerID)
+        default:
+            println("")
         }
+        
     }
 }
 

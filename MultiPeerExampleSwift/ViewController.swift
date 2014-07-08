@@ -60,10 +60,10 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
     }
     
     func sessionManager(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!) {
-        
-        println("sessionManager")
-        
+
         dispatch_async(dispatch_get_main_queue(), {
+            println("sessionManager")
+            
             let message = NSString(data: data, encoding: NSUTF8StringEncoding)
             let alert = UIAlertView()
             alert.title = "Message Received!"
@@ -127,7 +127,7 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
         case 1:
             return "Connecting"
         case 2:
-            return "Devices In Range - Tap to connect"
+            return "Devices In Range"
         default:
             return "My ID"
         }

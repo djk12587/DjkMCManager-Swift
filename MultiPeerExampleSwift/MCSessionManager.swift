@@ -147,10 +147,22 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     func advertiser(advertiser: MCNearbyServiceAdvertiser!, didReceiveInvitationFromPeer peerID: MCPeerID!, withContext context: NSData!, invitationHandler: ((Bool, MCSession!) -> Void)!) {
         println("\(_session?.myPeerID.displayName) did receive an invitation from \(peerID.displayName)")
         
-        println("\(_session?.myPeerID.displayName) accepted Invite \(peerID.displayName)")
-        invitationHandler(true,_session)
+        var shouldAcceptInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedAscending)
+        
+        /*if _session?.connectedPeers.count == 0 {
+            shouldAcceptInvite = true
+        }*/
+        
+        if shouldAcceptInvite {
+            println("\(_session?.myPeerID.displayName) accepted Invite from \(peerID.displayName)")
+        } else {
+            println("\(_session?.myPeerID.displayName) declinded Invite from \(peerID.displayName)")
+        }
+        
+        invitationHandler(shouldAcceptInvite,_session)
         
         _delegate?.sessionDidChangeState()
+
     }
     
     func advertiser(advertiser: MCNearbyServiceAdvertiser!, didNotStartAdvertisingPeer error: NSError!) {
@@ -165,9 +177,9 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     
     func browser(_browser: MCNearbyServiceBrowser!, foundPeer peerID: MCPeerID!, withDiscoveryInfo info: [NSObject : AnyObject]!) {
         
-            var shouldInvite = false
+            //var shouldInvite = false
             
-            if _session?.connectedPeers.count > 0 {
+            /*if _session?.connectedPeers.count > 0 {
                 
                 for aPeer:MCPeerID! in _session!.connectedPeers {
                     
@@ -192,18 +204,19 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
             } else {
                 println("regular invite")
                 shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
-            }
+            }*/
+        
+        var shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
             
-            
-            if shouldInvite {
-                println("\(_session?.myPeerID.displayName) sent invite to \(peerID.displayName)")
-                _browser.invitePeer(peerID, toSession: _session, withContext: nil, timeout: 10)
-            } else {
-                println("\(_session?.myPeerID.displayName) is not sending an invite to \(peerID.displayName)")
-            }
-            
-            _peersInRange.addObject(peerID)
-            _delegate?.sessionDidChangeState()
+        if shouldInvite {
+            println("\(_session?.myPeerID.displayName) sent invite to \(peerID.displayName)")
+            _browser.invitePeer(peerID, toSession: _session, withContext: nil, timeout: 10)
+        } else {
+            println("\(_session?.myPeerID.displayName) is not sending an invite to \(peerID.displayName)")
+        }
+        
+        _peersInRange.addObject(peerID)
+        _delegate?.sessionDidChangeState()
     }
     
     func browser(browser: MCNearbyServiceBrowser!, lostPeer peerID: MCPeerID!)  {

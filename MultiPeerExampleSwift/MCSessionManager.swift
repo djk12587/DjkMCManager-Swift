@@ -134,11 +134,8 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         println("\(_session?.myPeerID.displayName) didReceiveStreamWithName: \(streamName) fromPeer:\(peerID.displayName)")
     }
     
-    func session(session: MCSession!,
-        didReceiveCertificate certificate: AnyObject[]!,
-        fromPeer peerID: MCPeerID!,
-        certificateHandler: ((Bool) -> Void)!) {
-            certificateHandler(true)
+    func session(session: MCSession!, didReceiveCertificate certificate: [AnyObject]!, fromPeer peerID: MCPeerID!, certificateHandler: ((Bool) -> Void)!) {
+        certificateHandler(true)
     }
     
     func invitePeerToMesh(peerID:MCPeerID) {
@@ -166,48 +163,47 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
         println(error)
     }
     
-    func browser(browser: MCNearbyServiceBrowser!, foundPeer peerID: MCPeerID!, withDiscoveryInfo info: NSDictionary!)  {
+    func browser(_browser: MCNearbyServiceBrowser!, foundPeer peerID: MCPeerID!, withDiscoveryInfo info: [NSObject : AnyObject]!) {
         
-        var shouldInvite = false
-        
-        if _session?.connectedPeers.count > 0 {
-
-            for aPeer:MCPeerID! in _session!.connectedPeers {
+            var shouldInvite = false
+            
+            if _session?.connectedPeers.count > 0 {
                 
-                var minPeer = _session!.myPeerID.displayName
-                
-                if (minPeer.localizedCaseInsensitiveCompare(aPeer.displayName) != NSComparisonResult.OrderedDescending) {
-                    minPeer = aPeer.displayName
-                    //minPeer = _session!.myPeerID.displayName
+                for aPeer:MCPeerID! in _session!.connectedPeers {
+                    
+                    var minPeer = _session!.myPeerID.displayName
+                    
+                    if (minPeer.localizedCaseInsensitiveCompare(aPeer.displayName) != NSComparisonResult.OrderedDescending) {
+                        minPeer = aPeer.displayName
+                        //minPeer = _session!.myPeerID.displayName
+                    }
+                    
+                    println("the min displayName is \(minPeer)")
+                    
+                    if minPeer == _session!.myPeerID.displayName {
+                        println("min invite is sent")
+                        shouldInvite = true
+                    } else {
+                        println("min invite is not sent")
+                        shouldInvite = false
+                    }
                 }
                 
-                println("the min displayName is \(minPeer)")
-                
-                if minPeer == _session!.myPeerID.displayName {
-                    println("min invite is sent")
-                    shouldInvite = true
-                } else {
-                    println("min invite is not sent")
-                    shouldInvite = false
-                }
+            } else {
+                println("regular invite")
+                shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
             }
             
-        } else {
-            println("regular invite")
-            shouldInvite = (_session?.myPeerID.displayName.localizedCaseInsensitiveCompare(peerID.displayName) == NSComparisonResult.OrderedDescending)
-        }
-        
-        
-        if shouldInvite {
-            println("\(_session?.myPeerID.displayName) sent invite to \(peerID.displayName)")
-            browser.invitePeer(peerID, toSession: _session, withContext: nil, timeout: 10)
-        } else {
-            println("\(_session?.myPeerID.displayName) is not sending an invite to \(peerID.displayName)")
-        }
-        
-        _peersInRange.addObject(peerID)
-        _delegate?.sessionDidChangeState()
-
+            
+            if shouldInvite {
+                println("\(_session?.myPeerID.displayName) sent invite to \(peerID.displayName)")
+                _browser.invitePeer(peerID, toSession: _session, withContext: nil, timeout: 10)
+            } else {
+                println("\(_session?.myPeerID.displayName) is not sending an invite to \(peerID.displayName)")
+            }
+            
+            _peersInRange.addObject(peerID)
+            _delegate?.sessionDidChangeState()
     }
     
     func browser(browser: MCNearbyServiceBrowser!, lostPeer peerID: MCPeerID!)  {

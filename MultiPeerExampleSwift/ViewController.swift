@@ -143,7 +143,7 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
             var error:NSError?
             let alert = UIAlertView()
             
-            var singlePeerArray = MCPeerID[]()
+            var singlePeerArray = [MCPeerID]()
             singlePeerArray.append(singleton._session?.connectedPeers[indexPath.row] as MCPeerID)
             
             if singleton._session?.sendData(data, toPeers:singlePeerArray, withMode: MCSessionSendDataMode.Reliable, error: &error) {

@@ -407,6 +407,7 @@
 				D571730C196315E0003FCB1E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D571730D196315E0003FCB1E /* Build configuration list for PBXNativeTarget "MultiPeerExampleSwiftTests" */ = {
 			isa = XCConfigurationList;
@@ -415,6 +416,7 @@
 				D571730F196315E0003FCB1E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

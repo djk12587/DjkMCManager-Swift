@@ -159,7 +159,6 @@ class ViewController: UIViewController, MCSessionManagerDelegate, UITableViewDat
             alert.show()
             
         case 2:
-            println("\(singleton._session?.myPeerID.displayName) sent invite to \(singleton._peersInRange[indexPath.row].displayName)")
             singleton.invitePeerToMesh(singleton._peersInRange[indexPath.row] as MCPeerID)
         default:
             println("")

@@ -10,7 +10,7 @@ import Foundation
 import MultipeerConnectivity
 
 
-protocol MCSessionManagerDelegate {
+/*@class_protocol*/@objc protocol MCSessionManagerDelegate {
     func sessionDidChangeState()
     func sessionManager(session: MCSession!, didReceiveData data: NSData!, fromPeer peerID: MCPeerID!)
 }
@@ -34,7 +34,7 @@ class MCSessionManager:NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDel
     var _connectingPeers:NSMutableOrderedSet = NSMutableOrderedSet()
     var _peersInRange:NSMutableOrderedSet = NSMutableOrderedSet()
     
-    var _delegate:MCSessionManagerDelegate?
+    weak var _delegate:MCSessionManagerDelegate?
     
     var inMesh = false
     
